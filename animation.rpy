@@ -54,25 +54,25 @@ init:
 
 
 init python:
+    from datetime import datetime
     def set_speaking(name, dsm, event, **kwargs):
-        if config.has_voice:
+        if event == 'begin':
+            if name in dsm.bounce_on_speak:
+                renpy.show(name, at_list=[bounce])
+        elif event == 'show':
+            print(str(datetime.utcnow()) + ': Speech beginning, name: ' + name)
             dsm.speaking_characters.append(name)
-        else:
-            if event == 'begin':
-                if name in dsm.bounce_on_speak:
-                    renpy.show(name, at_list=[bounce])
-            elif event == 'show':
-                dsm.speaking_characters.append(name)
-            elif event == 'slow_done' or event == 'end':
-                if name in dsm.speaking_characters:
-                    dsm.speaking_characters.remove(name)
+        elif event == 'slow_done' or event == 'end':
+            print(str(datetime.utcnow()) + ': Speech ending, name: ' + name)
+            if name in dsm.speaking_characters:
+                dsm.speaking_characters.remove(name)
 
 
     speaker = renpy.curry(set_speaking)
 
 
     def is_speaking(name, dsm, speaking_mouth, default_mouth, st, at):
-        if (renpy.music.is_playing('voice') or not config.has_voice) and name in dsm.speaking_characters:
+        if name in dsm.speaking_characters:
             return speaking_mouth, .1
         else:
             return default_mouth, None

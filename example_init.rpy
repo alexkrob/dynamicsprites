@@ -7,6 +7,10 @@ init:
     # especially useful for values defined in `gui.rpy` or `options.rpy`.
     define colors.marj = "#38a886"
 
+    # By default, text_cps is set to 0 (all text is displayed instantly). To utilize the FlapMouth and Bounce
+    # animations, this value must be higher than 0.
+    $ preferences.text_cps = 40
+
     init python:
         # The first step of using the Dynamic Sprite Manager is to initialize it as a python object. Here, we've
         # abbreviated it as `dsm`, and will be using that name to call it throughout the project. However, we could
@@ -19,7 +23,7 @@ init:
         # In order to create a new sprite, we need to call the `add_sprite` method of the DSM. For more information on
         # what the arguments of this particular method need to be, see line 75 of `dynamicsprites.rpy`.
         marj_id = 'mj'
-        marj_sprite, mj = dsm.add_sprite(marj_id, 'marj', 'Marjolaine', display_name_color = colors.marj, scale=0.96)
+        marj_sprite, mj = dsm.add_sprite(marj_id, 'marj', 'Marjolaine', display_name_color = colors.marj)
 
         # The following steps can be done in any order.
 
@@ -101,6 +105,10 @@ init:
                               'brows': EmoteLayer('furrowed'),
                               'eyes': EmoteLayer('closed/flat'),
                               'mouth': EmoteLayer(animation=marj_mouths['pursed'])})
+        marj_sprite.add_emote('hat happy', 'hat', {
+                              'brows': EmoteLayer('default'),
+                              'eyes': EmoteLayer('closed/default'),
+                              'mouth': EmoteLayer(animation=marj_mouths['default'])})
 
         # When all your sprites and emotes have been added, the final call to `compile_sprites()` will dynamically
         # gather all your Dynamic Sprites and make them available for use in scripting. Because the sprites are compiled
