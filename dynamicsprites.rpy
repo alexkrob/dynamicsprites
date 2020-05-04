@@ -401,6 +401,9 @@ init python:
         Returns:
             (Dict[Any, Any]): An empty dict, nested properly in a much larger dictionary of dictionaries.
         """
+        if len(keys) == 0:
+            return d
+
         key = keys[0]
         if key not in d:
             d[key] = {}
