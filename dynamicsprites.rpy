@@ -81,9 +81,18 @@ init python:
                 character_tag                   (str): The character tag used in ren'py scripts to indicate this
                                                        character is speaking.
                 character_sprite_directory_name (str): The top-level directory containing all of this sprite's images.
+                display_name                    (str): The name of the character, to display in the ren'py dialogue box.
+                                                       This can also be a variable, if the kwarg `dynamic` is set to
+                                                       True.
+                layer_order                 List[str]: The order in which to draw the EmoteLayers for this character, in
+                                                       increasing zorder (bottom layer first).
                 scale                         (float): The scale factor to apply to all emotes belonging to this sprite.
                 offsets             (Tuple[int, int]): The x and y offsets, in pixels, to apply to all emotes belonging
                                                        to this sprite.
+                display_name_color              (str): A string representing a hex value for the color of the
+                                                       character's name in the ren'py dialogue box.
+                display_dialogue_color          (str): A string representing a hex value for the color of the dialogue
+                                                       spoken by the character in the ren'py dialogue box.
             """
             self.sprites[character_tag] = DynamicSprite(character_sprite_directory_name, layer_order, scale, offsets)
             self.enable_bounce(character_tag)
@@ -241,10 +250,14 @@ init python:
         in the DynamicSpriteManager class.
 
         Attributes:
-            dir_name            (str): The top-level directory containing all of this sprite's images.
-            emotes (Dict[str, Emote]): All the emotes, keyed by their names, belonging to this sprite.
-            scale             (float): The scale factor to apply to all emotes belonging to this sprite.
-            offsets (Tuple[int, int]): The x and y offsets, in pixels, to apply to all emotes belonging to this sprite.
+            dir_name                (str): The top-level directory containing all of this sprite's images.
+            layer_order         List[str]: The order in which to draw the EmoteLayers for this character, in increasing
+                                           zorder (bottom layer first).
+            emotes     (Dict[str, Emote]): All the emotes, keyed by their names, belonging to this sprite.
+            transforms (SpriteTransforms): The transforms for this sprite, accessible by attribute name.
+            scale                 (float): The scale factor to apply to all emotes belonging to this sprite.
+            offsets     (Tuple[int, int]): The x and y offsets, in pixels, to apply to all emotes belonging to this
+                                           sprite.
         """
         def __init__(self, character_sprite_directory_name, layer_order=None, scale=1, offsets=(0, 0)):
             self.dir_name = character_sprite_directory_name
@@ -370,6 +383,11 @@ init python:
             self.y = y
 
     class SpriteTransforms:
+        """Basic container class, holding all the transforms for a Dynamic Sprite.
+
+        Holds a dict internally, but uses the __getattr__ function to access the keys of that dict by attribute, making
+        the scripting experience easier.
+        """
         def __init__(self):
             self.transforms = {}
 
