@@ -125,6 +125,8 @@ screen sprite_inspector:
 
 
 init 1000 python:
+    from collections import OrderedDict
+
     inspector_dsm = None
     inspector_dsm_flattened_files = None
     inspector_dsm_expanded_directories = []
@@ -150,7 +152,8 @@ init 1000 python:
         flattened_list = []
 
         if isinstance(d, dict):
-            for k, v in d.items():
+            for k, v in OrderedDict(sorted(sorted(d.items(), key=lambda k: k[0]),
+                                                             key=lambda k: str(type(k[1])), reverse=True)).items():
                 if isinstance(v, dict):
                     flattened_list.append(ListEntry(level, True, k, False))
                     flattened_list.extend(flatten_dict(v, level + 1))
@@ -183,7 +186,6 @@ init 1000 python:
     def create_or_update_inspector_dsm():
         global inspector_dsm
         global inspector_dsm_flattened_files
-
 
         if inspector_dsm_location_exists:
             inspector_dsm = DynamicSpriteManager(inspector_dsm_location_text)
