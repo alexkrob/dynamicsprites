@@ -1,3 +1,9 @@
+screen image_browser:
+    if not inspector_dsm:
+        text "No Images Loaded" color "0006" offset (10, 10) size text_size
+    else:
+        text "Images loaded!" color "000f" offset (10, 10) size text_size
+
 screen sprite_inspector:
     key "K_ESCAPE" action Hide("sprite_inspector")
 
@@ -52,27 +58,33 @@ screen sprite_inspector:
                                 padding (5, 5)
                                 background Solid("0002")
                                 input:
-                                    color "000f"
+                                    color inspector_dsm_location_text_color
                                     size text_size
-                                    value inspector_dsm_location
                                     copypaste True
+                                    changed inspector_dsm_location_text_changed
                             textbutton "Index Images":
                                 xoffset 10
-                                background Solid("0006")
+                                if inspector_dsm_location_exists:
+                                    background Solid("0006")
+                                else:
+                                    background Solid("0002")
                                 hover_background Solid("0002")
-                                text_color "000f"
+                                if inspector_dsm_location_exists:
+                                    text_color "000f"
+                                else:
+                                    text_color "0006"
                                 text_size text_size
                                 action create_or_update_inspector_dsm
+                                sensitive inspector_dsm_location_exists
 
                     frame:
                         background Solid("fff8")
                         xsize 0.5
 
-                        viewport id "filebrowser":
-                            background Solid("0002")
-                            margin(10, 10)
+                        viewport:
                             xsize 0.5
-
+                            mousewheel True
+                            use image_browser
 
                 vbox:
                     spacing 10
@@ -92,20 +104,40 @@ screen sprite_inspector:
 init 1000 python:
     inspector_dsm = None
     inspector_dsm_location_text = ""
-    inspector_dsm_location = VariableInputValue("inspector_dsm_location_text", default=True, returnable=False)
+    inspector_dsm_location_text_color = "000f"
+    inspector_dsm_location_exists = False
     inspector_valid_directories = list(dict.fromkeys([os.path.dirname(f) for f in renpy.list_files()]))
 
     text_size = 22
     title_size = 30
 
 
+    def inspector_dsm_location_text_changed(inputtext):
+        global inspector_dsm_location_text_color
+        global inspector_dsm_location_text
+        global inspector_dsm_location_exists
+
+        inspector_dsm_location_text = inputtext
+
+        inspector_dsm_location_exists = inputtext in inspector_valid_directories and len(inputtext) > 0
+
+        if inspector_dsm_location_exists:
+            new_color = "000f"
+        else:
+            new_color = "#d60000"
+
+        if new_color != inspector_dsm_location_text_color:
+            inspector_dsm_location_text_color = new_color
+            renpy.restart_interaction()
+
+
     def create_or_update_inspector_dsm():
         global inspector_dsm
-        location_exists = inspector_dsm_location_text in inspector_valid_directories \
-                          and len(inspector_dsm_location_text) > 0
 
-        if location_exists:
+        if inspector_dsm_location_exists:
             inspector_dsm = DynamicSpriteManager(inspector_dsm_location_text)
+
+        renpy.restart_interaction()
 
 
     def show_sprite_inspector():
