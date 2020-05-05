@@ -1,8 +1,31 @@
 screen image_browser:
+    $ indent_size = 20
     if not inspector_dsm:
         text "No Images Loaded" color "0006" offset (10, 10) size text_size
     else:
-        text "Images loaded!" color "000f" offset (10, 10) size text_size
+        vbox:
+            spacing 10
+            for entry in inspector_image_browser_files:
+                    hbox:
+                        spacing 10
+                        xoffset indent_size * entry.level
+                        python:
+                            if entry.isexpanded:
+                                expanded_button_text = "▼"
+                            else:
+                                expanded_button_text = "►"
+                        if entry.isdir:
+                            textbutton expanded_button_text:
+                                xysize(text_size, text_size)
+                                background Solid("fff0")
+                                text_size text_size
+                                text_color "000f"
+                                text_hover_color "0006"
+                                action Function(update_expanded_list, entry)
+                        else:
+                            null width text_size
+
+                        text entry.label color "000f" size text_size
 
 screen sprite_inspector:
     key "K_ESCAPE" action Hide("sprite_inspector")
@@ -103,13 +126,39 @@ screen sprite_inspector:
 
 init 1000 python:
     inspector_dsm = None
+    inspector_dsm_flattened_files = None
+    inspector_dsm_expanded_directories = []
     inspector_dsm_location_text = ""
     inspector_dsm_location_text_color = "000f"
     inspector_dsm_location_exists = False
     inspector_valid_directories = list(dict.fromkeys([os.path.dirname(f) for f in renpy.list_files()]))
+    inspector_valid_filetypes = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp']
 
     text_size = 22
     title_size = 30
+
+
+    class ListEntry:
+        def __init__(self, level, isdir, label, isexpanded):
+            self.level = level
+            self.isdir = isdir
+            self.label = label
+            self.isexpanded = isexpanded
+
+
+    def flatten_dict(d, level=0):
+        flattened_list = []
+
+        if isinstance(d, dict):
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    flattened_list.append(ListEntry(level, True, k, False))
+                    flattened_list.extend(flatten_dict(v, level + 1))
+                else:
+                    if any([ext in v.lower() for ext in inspector_valid_filetypes]):
+                        flattened_list.append(ListEntry(level, False, k, False))
+
+        return flattened_list
 
 
     def inspector_dsm_location_text_changed(inputtext):
@@ -133,11 +182,37 @@ init 1000 python:
 
     def create_or_update_inspector_dsm():
         global inspector_dsm
+        global inspector_dsm_flattened_files
+
 
         if inspector_dsm_location_exists:
             inspector_dsm = DynamicSpriteManager(inspector_dsm_location_text)
+            inspector_dsm_flattened_files = flatten_dict(inspector_dsm.image_files)
+            update_expanded_list()
 
         renpy.restart_interaction()
+
+
+    def update_expanded_list(entry_to_expand=None):
+        global inspector_image_browser_files
+        global inspector_dsm_flattened_files
+
+        inspector_image_browser_files = []
+
+        if entry_to_expand:
+            entry_to_expand.isexpanded = not entry_to_expand.isexpanded
+
+        level_filter = 0
+
+        for ent in inspector_dsm_flattened_files:
+            level_filter = ent.level if ent.level < level_filter else level_filter
+
+            if ent.level == level_filter:
+                inspector_image_browser_files.append(ent)
+
+            if ent.isexpanded and ent.level == level_filter:
+                level_filter = ent.level + 1
+
 
 
     def show_sprite_inspector():
